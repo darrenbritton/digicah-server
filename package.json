@@ -1,0 +1,33 @@
+{
+  "name": "digicah-server",
+  "version": "1.0.0",
+  "description": "digicah online server",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/darrenbritton/digicah-server.git"
+  },
+  "author": "Darren Britton",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/darrenbritton/digicah-server/issues"
+  },
+  "homepage": "https://github.com/darrenbritton/digicah-server#readme",
+  "dependencies": {
+    "connect-redis": "^3.3.3",
+    "cookie-parser": "^1.0.1",
+    "express": "^4.1.1",
+    "express-session": "^1.0.4",
+    "passport": "^0.4.0",
+    "passport-google-oauth20": "^1.0.0",
+    "primus": "^7.2.0",
+    "ws": "^5.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^1.17.4"
+  }
+}
