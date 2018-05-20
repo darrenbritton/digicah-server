@@ -5,6 +5,7 @@
 //
 const express = require('express');
 const expressSession = require('express-session');
+const redis = require('redis');
 const RedisStore = require('connect-redis')(expressSession);
 const cookieParser = require('cookie-parser');
 const http = require('http');
@@ -14,6 +15,12 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20');
 
 const Secrets = require('./.secrets');
+
+const Game = require('./models/game');
+const Message = require('./models/message');
+const Player = require('./models/player');
+
+const Games = [];
 
 passport.use(new GoogleStrategy({
         clientID: Secrets.google.id,
@@ -35,14 +42,17 @@ const app = express();
 const secret = Secrets.appSecret || Math.random().toString(36);
 const cookies = cookieParser(secret);
 
-//
-// Since this is only an example, we will use the `MemoryStore` to store the
-// sessions. This is our session store instance.
-//
+/* redis */
+const host = process.env.REDIS_HOST || '127.0.0.1';
+const port = 6379;
+const client = redis.createClient(port,host);
 const store = new RedisStore({
-    host: 'localhost',
-    port: 32769,
+    client,
     ttl: 15768000
+});
+
+client.on('connect', function() {
+    console.log(`redis connected - ${host}:${port}`);
 });
 
 //
@@ -76,7 +86,7 @@ app.get('/auth/google/callback',
     passport.authenticate('google'),
     function(req, res) {
         // Successful authentication, redirect home.
-        res.redirect('/');
+        res.redirect('//localhost:3000');
     });
 
 app.get('/', function index(req, res) {
@@ -91,17 +101,20 @@ app.get('/', function index(req, res) {
 app.get('/logout', function(req, res){
     console.log('logging out');
     req.logout();
-    res.redirect('/');
+    res.redirect('//localhost:3000');
 });
 
 function ensureAuthenticated(req, res, next) {
     if (req.isAuthenticated()) { return next(); }
-    res.redirect('/')
+    res.status(401).send({ error: 'Unauthenticated' })
 }
 
 app.get('/protected', ensureAuthenticated, function(req, res) {
-    res.send("access granted:", req.session);
+    res.send("access granted");
 });
+
+const newGame = new Game('thunderdome', ['base']);
+Games.push(newGame);
 
 //
 // Create an HTTP server and our Primus server.
@@ -118,10 +131,24 @@ primus.use('cookies', cookies);
 primus.use('session', primusSession, { store: store });
 
 primus.on('connection', function connection(spark) {
-  //
-  // Our session data can now be read from `spark.request.session`.
-  //
-  spark.write(JSON.stringify(spark.request.session, null, '  '));
+  if(spark.request.session.passport && spark.request.session.passport.user) {
+    const { user } = spark.request.session.passport;
+    const player = new Player(user.id, user.displayName, user.photos[0].value, spark);
+    newGame.players.push(player);
+    newGame.start();
+    spark.write({action: 'save.player', payload: player});
+    spark.on('data', function (data) {
+      switch(data.action) {
+        case 'chat.message':
+          Games.forEach(game => {
+            if(game.isPlayer(player.id)) {
+              const message = new Message(player.nickname, player.id, player.profilePicture, data.payload.text);
+              game.chat.send(message, game.players);
+            }
+          });
+      }
+    });
+  }
 });
 
 //

@@ -63,3 +63,4 @@ typings/
 # custom
 .secrets.js
 .idea/
+redis-data/

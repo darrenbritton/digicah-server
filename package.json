@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha */tests/*.test.js"
   },
   "repository": {
     "type": "git",
@@ -22,12 +22,16 @@
     "cookie-parser": "^1.0.1",
     "express": "^4.1.1",
     "express-session": "^1.0.4",
+    "jsonfile": "^4.0.0",
     "passport": "^0.4.0",
     "passport-google-oauth20": "^1.0.0",
     "primus": "^7.2.0",
+    "redis": "^2.8.0",
     "ws": "^5.1.1"
   },
   "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0",
     "nodemon": "^1.17.4"
   }
 }

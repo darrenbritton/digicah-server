@@ -9,18 +9,50 @@
       <li><a href='/auth/google'>Google</a></li>
       <li><a href='/logout'>logout</a></li>
     </ul>
+    <h1>Chat:</h1>
+    <ul id="chat"></ul>
+    <form id="messageForm">
+      <input type="text" id="messageInput" placeholder="Enter Chat Message Here">
+      <input type="submit" value="send">
+    </form>
     <h1>Sharing session data between Express and Primus</h1>
     <pre id="session"></pre>
     <script src="/primus/primus.js"></script>
     <script>
       (function () {
         var session = document.getElementById('session')
-          , primus = new Primus();
+          , chat = document.getElementById('chat'),
+            primus = new Primus();
+
+        document.getElementById('messageForm').addEventListener('submit', function sendMessage(event) {
+          event.preventDefault();
+          var message = document.getElementById('messageInput').value;
+          primus.write({action: 'chat.message', payload: {text: message}});
+        });
 
         primus.on('data', function (data) {
-          session.textContent = data;
+          switch(data.action) {
+            case 'log.session':
+              session.textContent = data.payload;
+              break;
+            case 'chat.message':
+              chat.innerHTML += `<li><img src="${data.payload.profilePicture}" /><h5>${data.payload.nickname}</h5><p>${timeConverter(data.payload.timestamp)}</p><p>${data.payload.message}</p></li>`;
+          }
         });
       })();
+
+      function timeConverter(UNIX_timestamp){
+        var a = new Date(UNIX_timestamp * 1000);
+        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        var year = a.getFullYear();
+        var month = months[a.getMonth()];
+        var date = a.getDate();
+        var hour = a.getHours();
+        var min = a.getMinutes();
+        var sec = a.getSeconds();
+        var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
+        return time;
+      }
     </script>
   </body>
 </html>
