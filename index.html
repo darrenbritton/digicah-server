@@ -27,7 +27,7 @@
         document.getElementById('messageForm').addEventListener('submit', function sendMessage(event) {
           event.preventDefault();
           var message = document.getElementById('messageInput').value;
-          primus.write({action: 'chat.message', payload: {text: message}});
+          primus.write({type: 'chat.message', payload: {text: message}});
         });
 
         primus.on('data', function (data) {

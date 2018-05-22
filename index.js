@@ -137,12 +137,13 @@ primus.on('connection', function connection(spark) {
     newGame.players.push(player);
     newGame.start();
     spark.write({action: 'save.player', payload: player});
-    spark.on('data', function (data) {
-      switch(data.action) {
+    spark.on('data', function (event) {
+      console.log(event);
+      switch(event.type) {
         case 'chat.message':
           Games.forEach(game => {
             if(game.isPlayer(player.id)) {
-              const message = new Message(player.nickname, player.id, player.profilePicture, data.payload.text);
+              const message = new Message(player.nickname, player.id, player.profilePicture, event.payload.text);
               game.chat.send(message, game.players);
             }
           });
