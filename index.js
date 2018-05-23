@@ -130,6 +130,14 @@ const server = http.createServer(app)
 primus.use('cookies', cookies);
 primus.use('session', primusSession, { store: store });
 
+const cardsFolder = './cards/white';
+const fs = require('fs');
+const Cardpacks = [];
+
+fs.readdirSync(cardsFolder).forEach(filename => {
+    Cardpacks.push(filename.split('.')[0]);
+});
+
 primus.on('connection', function connection(spark) {
   if(spark.request.session.passport && spark.request.session.passport.user) {
     const { user } = spark.request.session.passport;
@@ -137,16 +145,24 @@ primus.on('connection', function connection(spark) {
     newGame.players.push(player);
     newGame.start();
     spark.write({action: 'save.player', payload: player});
+    spark.write({action: 'save.lobbies', payload: Games});
+    spark.write({action: 'save.cardpacks', payload: Cardpacks});
     spark.on('data', function (event) {
       console.log(event);
+      const { payload } = event;
       switch(event.type) {
         case 'chat.message':
           Games.forEach(game => {
             if(game.isPlayer(player.id)) {
-              const message = new Message(player.nickname, player.id, player.profilePicture, event.payload.text);
+              const message = new Message(player.nickname, player.id, player.profilePicture, payload.text);
               game.chat.send(message, game.players);
             }
           });
+          break;
+        case 'game.create':
+            Games.push(new Game(payload.name, payload.cardpacks, player.nickname, payload.password));
+            spark.write({action: 'save.lobbies', payload: Games});
+            break;
       }
     });
   }

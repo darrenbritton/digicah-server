@@ -1,6 +1,7 @@
 'use strict';
 
 const { readFileSync } = require('jsonfile');
+const uuidv4 = require('uuid/v4');
 const path = require('path');
 
 const Chat = require('./chat');
@@ -8,14 +9,17 @@ const Deck = require('./deck');
 const Round = require('./round');
 
 module.exports = class Game {
-    constructor(name, cardpacks, creator = 'none', password = '', scoreLimit = 10, waitForUsers = false, handSize = 10, timeout = 30) {
+    constructor(name, cardpacks, creator = 'none', password = '', scoreLimit = 10, waitForPlayers = false, handSize = 10, timeout = 30, maxPlayers = 10) {
 
+        this.id = uuidv4();
         this.name = name;
         this.password = password;
+        this.hasPassword = !!password;
         this.cardpacks = cardpacks;
         this.creator = creator;
         this.scoreLimit = scoreLimit;
-        this.waitForUsers = waitForUsers;
+        this.waitForPlayers = waitForPlayers;
+        this.maxPlayers = maxPlayers;
         this.handSize = handSize;
         this.timeout = timeout;
 
