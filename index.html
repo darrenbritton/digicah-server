@@ -15,6 +15,12 @@
       <input type="text" id="messageInput" placeholder="Enter Chat Message Here">
       <input type="submit" value="send">
     </form>
+    <form id="notificationForm">
+      <input type="text" id="notificationInput" placeholder="Enter Notification Here">
+      <input type="text" id="notificationActionInput" placeholder="Enter Notification Action Here">
+      <input type="text" id="notificationActionTextInput" placeholder="Enter Notification Action Text Here">
+      <input type="submit" value="send">
+    </form>
     <h1>Sharing session data between Express and Primus</h1>
     <pre id="session"></pre>
     <script src="/primus/primus.js"></script>
@@ -28,6 +34,14 @@
           event.preventDefault();
           var message = document.getElementById('messageInput').value;
           primus.write({type: 'chat.message', payload: {text: message}});
+        });
+
+        document.getElementById('notificationForm').addEventListener('submit', function sendMessage(event) {
+            event.preventDefault();
+            var text = document.getElementById('notificationInput').value;
+            var action = document.getElementById('notificationActionInput').value;
+            var actionText = document.getElementById('notificationActionTextInput').value;
+            primus.write({type: 'notify.generic', payload: {text, action, actionText}});
         });
 
         primus.on('data', function (data) {

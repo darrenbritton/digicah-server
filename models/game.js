@@ -25,7 +25,7 @@ module.exports = class Game {
 
         this.chat = new Chat();
         this.lastCzar = -1;
-        this.currentRound = null;
+        this.currentRound = { blackCard: { text: ''}};
         this.players = [];
         this.whiteDeck = [];
         this.blackDeck = [];
@@ -54,11 +54,48 @@ module.exports = class Game {
         return !!this.players.find(player => player.id === id);
     }
 
+    join(player) {
+        if(!this.players.find(i => i.id === player.id)) {
+            this.players.push(player);
+            this.sendToPlayers({action: 'game.update', payload: this});
+
+        }
+        if (this.creator === 'none' && this.players.length > 1) {
+            const data = {action: 'notify.generic', payload: {text: 'Game is starting...'}};
+            this.sendToPlayers(data);
+            setTimeout(() => {
+               this.newRound();
+            }, 3000);
+        }
+    }
+
+    sendToPlayers(event) {
+        this.players.forEach(player => {
+            player.spark.write(event);
+        });
+    }
+
+    populateHand(player) {
+        while(player.hand.length !== this.handSize) {
+            player.hand.push(this.whiteDeck.pop());
+        }
+    }
+
     newRound() {
+        if(this.lastCzar === -1) {
+            this.populateDecks();
+        }
+
         const roundPlayers = this.players.filter(player => !player.onBreak);
 
+        if (this.players[this.lastCzar]) this.players[this.lastCzar].isCzar = false;
         this.lastCzar++;
+        if (this.lastCzar === roundPlayers.length - 1) this.lastCzar = 0;
+        this.players[this.lastCzar].isCzar = true;
+        this.players.forEach(player => this.populateHand(player));
         this.currentRound = new Round(roundPlayers[this.lastCzar % roundPlayers], this.blackDeck.pop(), roundPlayers);
+        this.sendToPlayers({action: 'notify.generic', payload: {text: `${this.players[this.lastCzar].nickname} is the Card Czar for this round`}});
+        this.sendToPlayers({action: 'game.update', payload: this});
     }
 
     display() {

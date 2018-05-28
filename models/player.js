@@ -12,6 +12,7 @@ module.exports = class Player {
         this.profilePicture = profilePicture;
         this.spark = spark;
         this.onBreak = false;
+        this.isCzar = false;
         this.score = 0;
         this.hand = [];
     }

@@ -86,7 +86,7 @@ app.get('/auth/google/callback',
     passport.authenticate('google'),
     function(req, res) {
         // Successful authentication, redirect home.
-        res.redirect('//localhost:3000');
+        res.redirect('//localhost:3000/play');
     });
 
 app.get('/', function index(req, res) {
@@ -99,7 +99,15 @@ app.get('/', function index(req, res) {
 });
 
 app.get('/logout', function(req, res){
-    console.log('logging out');
+    const { user: player } = req.session.passport;
+    if (player) {
+        Games.forEach((game, i) => {
+            if (game.isPlayer(player.id)) {
+                game.players.splice(i, 1);
+                primus.write({action: 'save.lobbies', payload: Games});
+            }
+        });
+    }
     req.logout();
     res.redirect('//localhost:3000');
 });
@@ -142,13 +150,15 @@ primus.on('connection', function connection(spark) {
   if(spark.request.session.passport && spark.request.session.passport.user) {
     const { user } = spark.request.session.passport;
     const player = new Player(user.id, user.displayName, user.photos[0].value, spark);
-    newGame.players.push(player);
-    newGame.start();
     spark.write({action: 'save.player', payload: player});
     spark.write({action: 'save.lobbies', payload: Games});
     spark.write({action: 'save.cardpacks', payload: Cardpacks});
+    Games.forEach(game =>{
+      if (game.isPlayer(player.id)) {
+          spark.write({action: 'player.joinGame', payload: { id: game.id}});
+      }
+    });
     spark.on('data', function (event) {
-      console.log(event);
       const { payload } = event;
       switch(event.type) {
         case 'chat.message':
@@ -159,7 +169,16 @@ primus.on('connection', function connection(spark) {
             }
           });
           break;
-        case 'game.create':
+        case 'notify.generic':
+          primus.write({action: event.type, payload: event.payload});
+          break;
+        case 'player.joinGame':
+            const game = Games.find(game => game.id === payload.id);
+            if (game) {
+                game.join(player);
+            }
+            break;
+          case 'game.create':
             Games.push(new Game(payload.name, payload.cardpacks, player.nickname, payload.password));
             spark.write({action: 'save.lobbies', payload: Games});
             break;
@@ -167,6 +186,18 @@ primus.on('connection', function connection(spark) {
     });
   }
 });
+
+// primus.on('disconnection', function (spark) {
+//     if(spark.request.session.passport && spark.request.session.passport.user) {
+//         const {user: player} = spark.request.session.passport;
+//         Games.forEach((game, i) => {
+//             if (game.isPlayer(player.id)) {
+//                 game.players.splice(i, 1);
+//                 primus.write({action: 'save.lobbies', payload: Games});
+//             }
+//         });
+//     }
+// });
 
 //
 // Begin accepting connections.
