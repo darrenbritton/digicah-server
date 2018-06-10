@@ -1,13 +1,18 @@
-'use strict';
+
 
 module.exports = class Card {
-    constructor(text) {
-        if (!typeof text === 'string') throw new TypeError('Card.text parameter must be of type: String');
+  constructor(text) {
+    if (!typeof text === 'string') throw new TypeError('Card.text parameter must be of type: String');
 
-        this.text = text;
-    }
+    this.text = text;
+    this.played = false;
+  }
 
-    display() {
-        console.log('Card:', JSON.stringify(this.text));
-    }
+  play() {
+    this.played = true;
+  }
+
+  display() {
+    console.log('Card:', JSON.stringify(this.text));
+  }
 };

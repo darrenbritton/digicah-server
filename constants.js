@@ -1,5 +1,5 @@
 module.exports = {
-    ACTION_TYPES: [
-        'chat.send'
-    ]
+  ACTION_TYPES: [
+    'chat.send',
+  ],
 };
