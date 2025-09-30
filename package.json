@@ -23,16 +23,16 @@
     "connect-redis": "^3.3.3",
     "cookie-parser": "^1.0.1",
     "delay": "^3.0.0",
-    "express": "^4.1.1",
+    "express": "^4.20.0",
     "express-session": "^1.0.4",
     "jsonfile": "^4.0.0",
-    "passport": "^0.4.0",
+    "passport": "^0.6.0",
     "passport-google-oauth20": "^1.0.0",
     "primus": "^7.2.0",
-    "redis": "^2.8.0",
+    "redis": "^3.1.1",
     "timeout-then": "^1.1.0",
     "uuid": "^3.2.1",
-    "ws": "^5.1.1"
+    "ws": "^5.2.4"
   },
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.49",
